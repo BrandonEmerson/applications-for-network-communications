@@ -1,0 +1,60 @@
+/*Este programa espera conexion, dependiendo de lo que reciba , regresa un arreglo aleatorio de
+un tamaño determinado */
+/*Autores: Brandon Serrano
+           Sergio Rico */
+package main;
+import java.io.*;
+import java.net.*;
+
+public class Server_Minas {
+      public static  void main(String[] args){
+            ObjectOutputStream oos = null;
+            ObjectInputStream ois = null;
+          try{
+              ServerSocket s = new ServerSocket(1234);
+              System.out.println("Esperando conexion:...");
+              for(;;){
+              Socket cl = s.accept();
+              System.out.println("Conexion establecida desde:"+cl.getPort() +"\n Direccion IP:"+cl.getInetAddress());
+              DataInputStream dis =  new DataInputStream(cl.getInputStream());
+              String nvl_dif =dis.readUTF();
+              String nombre =dis.readUTF();
+              System.out.println("Dificultad: "+nvl_dif);
+              System.out.println("\n Nombre: "+nombre);
+              int matriz[][] = new int [9][9];
+              int num_mina = 10;
+                for (int x=0; x < matriz.length; x++) {
+                    for (int y=0; y < matriz[x].length; y++) {
+                           matriz[x][y] = (int) (Math.random()*9+1);
+                    }
+                }
+                //mandamos el numero de minas
+                DataOutputStream dos = new DataOutputStream(cl.getOutputStream());
+                dos.writeInt(num_mina);
+                dos.flush();
+                //para mandar la matriz ay que serializar
+                oos= new ObjectOutputStream(cl.getOutputStream());
+                oos.writeObject(matriz);
+                oos.flush();
+                //recibimos la puntuacion y ay que almacenarla 
+                ois= new ObjectInputStream(cl.getInputStream());
+                puntuacion p0=(puntuacion)ois.readObject();
+                File f = new File("archivos.txt");
+                FileOutputStream fos = new FileOutputStream(f);
+                oos = new ObjectOutputStream(fos);
+                oos.writeObject(p0); 
+                oos.close();
+                System.out.println("Objeto recibido.. Extrayendo informacion");
+        System.out.println("Minas = "+p0.getminas());
+        System.out.println("Usuario = "+p0.getusuario());
+        System.out.println("intentos = "+p0.getpart_play());
+        //mandar el objeto a un archivo
+
+                dis.close();
+                cl.close();
+              }
+          }catch(Exception e){
+              e.printStackTrace(); 
+          }
+      }
+}
