@@ -1,0 +1,54 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Cliente{
+    public static void main(String[] args) {
+        try{
+            String serv = "localhost";
+            int port = 9999;
+            Socket cl = new Socket(serv,port);
+            System.out.println("Conectado con " + cl.getInetAddress() + ":" + cl.getPort());
+            DataInputStream dis = new DataInputStream(cl.getInputStream());
+            int num = dis.readInt();
+            System.out.println("recibe la cantidad de clientes: " + num);
+            int id = dis.readInt();
+            System.out.println("recibe el id: " + id);
+            String archivo = dis.readUTF();
+            System.out.println("recibe el nombre: " + archivo);
+            DataInputStream disf = new DataInputStream(new FileInputStream(archivo));
+            File temp = new File(archivo);
+            long size = temp.length() / num;
+            if(id == 0) {size -= 1;} 
+            DataOutputStream dos=new DataOutputStream(cl.getOutputStream());
+            dos.writeLong((long)size);
+            dos.flush();
+            System.out.println("envia la cantidad de bytes a enviar: " +(long)size);
+            byte[] b = new byte[1];
+            long env = 0;
+            int n = 0;
+            int pos = (int)(id - 1) * (int)(size);
+            System.out.println("posicion de inicio: " + pos);
+            while(env < pos){
+                n = disf.read(b);
+                env += n;
+            }
+            int cont = 0;
+            env = 0;
+            while(env <= (int)size){
+                n = disf.read(b);
+                dos.write(b);
+                dos.flush();
+                env += n;
+                pos += n;
+                cont += n;
+            }
+            disf.close();
+            dis.close();
+            dos.close();
+            System.out.println("envio "+env+" datos");
+            cl.close();
+        }
+        catch(Exception e) { }
+    }
+}
