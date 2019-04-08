@@ -1,0 +1,51 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Conexion extends Thread {
+    private Socket client;
+    private String archivo;
+    private int ID;
+    private int noClientes;
+    public Conexion(Socket client, String archivo, int ID, int noClientes) {
+        this.client = client;
+        this.archivo = archivo;
+        this.ID = ID;
+        this.noClientes = noClientes;
+    }
+    
+    public void run() {
+        try {
+            System.out.println("Conexion realizada con " + client.getInetAddress() + ":" + client.getPort());
+            DataOutputStream aux=new DataOutputStream(client.getOutputStream());
+            DataInputStream dis=new DataInputStream(client.getInputStream());
+            aux.writeInt(noClientes);
+            aux.flush();
+            aux.writeInt(ID);
+            aux.flush();
+            aux.writeUTF(archivo);
+            aux.flush();
+            System.out.println("hilo " + ID + " envio el nombre de archivo " + archivo);
+            archivo = archivo+".part" + ID;
+            DataOutputStream dos=new DataOutputStream(new FileOutputStream(archivo));
+            System.out.println("hilo " + ID + " crea archivo temporal " + archivo);
+            long tam = dis.readLong();
+            System.out.println("hilo " + ID + " recibe tamaño " + tam);
+            long rec = 0;
+            int n = 0;
+            byte[] b=new byte[1];
+            while(rec<tam){
+                n=dis.read(b);
+                dos.write(b);
+                dos.flush();
+                rec=rec+n;
+            }
+            System.out.println("hilo " + ID + " termina de recibir los  " + rec + " bytes esperados" );
+            dos.close();
+            aux.close();
+            dis.close();
+            client.close();
+        }
+        catch(IOException e) {}
+    }
+}
