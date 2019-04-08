@@ -1,0 +1,65 @@
+/*Este programa, le pide al usuario el nivel del jugador y nombre del jugador,
+y debe regresar con seriablizable, datos de la partida*/
+/*Autores: Brandon Serrano
+           Sergio Rico*/
+package main;
+import java.io.*;
+import java.net.*;
+import java.io.Serializable;
+import javax.swing.JOptionPane;
+
+public class Client_Minas {
+    public static void main(String[] args){
+            ObjectInputStream ois = null;
+            ObjectOutputStream oos=null;
+            int[][] matriz_rec=null;
+
+        try{
+            BufferedReader br =new BufferedReader (new InputStreamReader(System.in));
+            System.out.println("Ingrese el puerto al que se quiere conectar:");
+            int port = Integer.parseInt(br.readLine());
+            System.out.println("Ingrese la dirección IP:");
+            String host = br.readLine();
+            Socket cl = new Socket(host,port);
+            //Creo el canal vinvulado al socket  para enviar metadatos
+            DataOutputStream dos =new DataOutputStream(cl.getOutputStream());
+            String nvl_dif = JOptionPane.showInputDialog("Nivel de dificultad");
+            dos.writeUTF(nvl_dif);
+            dos.flush();
+            String nombre = JOptionPane.showInputDialog("Nombre del jugador");
+            dos.writeUTF(nombre);
+            dos.flush();
+            //recibimos el numero de minas
+            DataInputStream dis = new DataInputStream(cl.getInputStream());
+            int num_minas = dis.readInt();
+            System.out.println("Numero de minas es:"+num_minas);
+            //recibimos el onjeto serializable
+            ois = new ObjectInputStream(cl.getInputStream());
+            matriz_rec=(int[][])ois.readObject();
+            System.out.println("Objeto recibido.. Extrayendo informacion");
+            //ciclo for para imprimir cada valor de la matriz
+                for (int[] arr : matriz_rec) {
+                     for (int val : arr) {
+                        System.out.println(val);
+            }
+        }
+        //creamos el objeto puntuacion con los valores obtenidos
+            puntuacion p0=new puntuacion(2,"Brandon",10);
+            System.out.println("Enviando objeto");
+        //mandamos el objeto serializable
+            oos= new ObjectOutputStream(cl.getOutputStream());
+            oos.writeObject(p0);
+            oos.flush();
+        //recibe archivo
+             /*   for (int x=0; x < matriz_rec.length; x++) {
+                    for (int y=0; y < matriz_rec[x].length; y++) {
+                          System.out.println(matriz_rec[x]);
+                    }
+                }*/
+            br.close();
+            cl.close();
+        }catch(Exception e){
+                    System.out.println(e);
+                    }
+    }   
+}
