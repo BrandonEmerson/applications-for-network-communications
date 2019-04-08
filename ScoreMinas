@@ -1,0 +1,33 @@
+/*Este programa declara la clase puntuacion, implementa serializable*/
+/*Autores: Brandon Serrano & Sergio Rico*/
+package main;
+import java.io.Serializable;
+public class puntuacion implements Serializable {
+    int minas_loc;
+    String usuario;
+    int part_play;
+    //constructor    
+    public puntuacion(int minas_loc, String usuario, int part_play){
+        this.minas_loc=minas_loc;
+        this.usuario=usuario;
+        this.part_play=part_play;
+    }
+  public int getminas(){
+    return minas_loc;
+    }
+  public String getusuario(){
+    return usuario;
+    }
+  public int getpart_play(){
+    return part_play;
+    }
+  public void setminas(int minas_loc){
+  this.minas_loc=minas_loc;
+  }
+  public void setusuario(String usuario){
+  this.usuario=usuario;
+  }
+  public void part_play(int part_play){
+  this.part_play=part_play;
+  }  
+}
