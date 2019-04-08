@@ -1,0 +1,83 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import javax.swing.SwingWorker;
+
+public class Server {
+    private static int clientesTerminados;
+
+    static void asignaCT(int valor) {
+        clientesTerminados = valor;
+    }
+
+    public static void main(String[] args) {
+        Scanner e = new Scanner(System.in);
+        try {
+            ServerSocket server = new ServerSocket(9999);
+            server.setReuseAddress(true);
+            System.out.println("Servidor listo...");
+            while(true) {
+                System.out.println("\nIngrese el nombre del archivo a solicitar: ");
+                final String archivo = e.nextLine();
+                final int noClientes;
+                clientesTerminados = 0;
+                while(true) {
+                    System.out.println("\nIngrese el numero de clientes: ");
+                    if(e.hasNextInt()) {
+                        noClientes = e.nextInt();
+                        e.nextLine();
+                        break;
+                    } else {
+                        System.out.println("Ingresa un numero");
+                    }
+                }
+                SwingWorker[] clientes = new SwingWorker[noClientes];
+                for (int i = 0 ; i < noClientes ; i ++) {
+                    final int j = i + 1;
+                    final Socket client = server.accept();
+                    clientes[i] = new SwingWorker(){
+                        int id;
+                        @Override
+                        protected Object doInBackground() throws Exception {
+                            id = j;
+                            Conexion conect = new Conexion(client, archivo, id, noClientes);	
+                            conect.run();
+                            return null;
+                        }
+                        @Override
+                        protected void done() {
+                            System.out.println("Conexion con el cliente " + id + " finalizada");
+                            asignaCT(clientesTerminados + 1);
+                            super.done();
+                        }
+                    };
+                    clientes[i].execute();
+                }
+                while(clientesTerminados < noClientes){
+                    System.out.print("");
+                }
+                System.out.println("Termino de recibir archivos temporales");
+                DataOutputStream dos = new DataOutputStream(new FileOutputStream(archivo));
+                byte[] b = new byte[1];
+                for(int i = 0 ; i < noClientes ; i++){
+                    File temp=new File(archivo + ".part" + (i + 1));
+                    DataInputStream leer = new DataInputStream(new FileInputStream(archivo + ".part" + (i + 1)));
+                    System.out.println("archivo abierto: " + archivo + ".part" + (i + 1));
+                    long n = temp.length();
+                    int cont = 0, c = 0;
+                    while(cont < n){
+                        c = leer.read(b);
+                        dos.write(b);
+                        dos.flush();
+                        cont += c;
+                    }
+                    leer.close();
+                    System.out.println("\nCierra el archivo " + archivo + ".part" + (i + 1));
+                    String comando = "rm " + archivo + ".part" + (i + 1);
+                    Runtime.getRuntime().exec(comando);
+                }
+                dos.close();
+            }
+        } catch(Exception ex) { }
+    }
+}
